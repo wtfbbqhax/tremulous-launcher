@@ -13,6 +13,9 @@ Author:  jkent
 
 #include "Semver.h"
 
+#include <iostream>
+#include <cstdint>
+
 namespace Launcher
 {
     class Component
@@ -20,11 +23,11 @@ namespace Launcher
     public:
         Component();
         Component(const Component& other);
-        Component(const String& name);
+        Component(const std::string& name);
 
         void setRemoteVersion(const Semver& version);
         bool canUpdate();
-        String& getName();
+        std::string& getName();
 
         bool getRemoteInfo();
         bool alreadyInstalled();
@@ -33,13 +36,13 @@ namespace Launcher
         bool install();
 
     private:
-        String name;
+        std::string name;
         Semver localVersion;
         Semver remoteVersion;
-        URL remoteUrl;
-        int64 remoteSize;
-        String remoteHash;
-        File downloadPath;
+        std::string remoteUrl;
+        int64_t remoteSize;
+        std::string remoteHash;
+        FILE downloadPath;
 
         bool installPk3();
         bool installLauncher();

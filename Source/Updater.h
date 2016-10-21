@@ -11,8 +11,11 @@
 #ifndef UPDATER_H_INCLUDED
 #define UPDATER_H_INCLUDED
 
-#include "Component.h"
-#include "Semver.h"
+#include <iostream>
+#include <vector>
+
+//#include "Component.h"
+//#include "Semver.h"
 
 enum UpdaterStatus {
     UPDATER_NOTSTARTED = 0,
@@ -22,7 +25,7 @@ enum UpdaterStatus {
     UPDATER_FAILED,
 };
 
-class Updater : public Thread
+class Updater
 {
 public:
     static const char UPDATER_URL_PREFIX[];
@@ -31,19 +34,19 @@ public:
     ~Updater();
 
     bool checkForUpdates();
-    void run() override;
+    void run(); //override;
 
     // Status information
     enum UpdaterStatus getStatus();
     bool getStatusUpdate(double& overallPercent, double& taskPercent);
-    String getStatusText();
+    std::string getStatusText();
 
     static Updater *getUpdater();
-    static bool downloadFile(const URL& url, const File& file, int64 resume=0);
+    static bool downloadFile(const std::string& url, const FILE& file, bool resume = 0);
 
 private:
-    File basepath;
-    Array<Launcher::Component> components;
+    FILE basepath;
+    std::vector<Launcher::Component> components;
 
     bool getLatestComponents();
     bool updateComponent(Launcher::Component& component);
@@ -52,8 +55,8 @@ private:
 
     // Status information
     enum UpdaterStatus status;
-    SpinLock statusLock;
-    String statusString;
+    //SpinLock statusLock;
+    std::string statusString;
     bool statusStringUpdated;
     double taskPercent;
     double overallPercent;
@@ -61,7 +64,7 @@ private:
     int totalTasks;
     int completedTasks;
 
-    void setStatusText(const String& s);
+    void setStatusText(const std::string& s);
     void startFirstTask();
     void startNextTask();
     void setTaskPercent(const double& percent);

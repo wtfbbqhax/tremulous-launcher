@@ -8,11 +8,10 @@
   ==============================================================================
 */
 
-#include "../JuceLibraryCode/JuceHeader.h"
 #include "Updater.h"
-#include "Crypto.h"
-#include "Main.h"
-#include "IniFile.h"
+//#include "Crypto.h"
+////#include "Main.h"
+//#include "IniFile.h"
 
 #define DOWNLOAD_UPDATE_INTERVAL 100
 #define DOWNLOAD_AVERAGE_TIME 10000
@@ -23,17 +22,17 @@ const char Updater::UPDATER_URL_PREFIX[] = "http://trem.jkent.net/updater/";
 Updater *Updater::updater;
 
 Updater::Updater()
-    :Thread("Updater Thread"), status(UPDATER_NOTSTARTED), taskPercent(0), overallPercent(0)
+//    :Thread("Updater Thread"), status(UPDATER_NOTSTARTED), taskPercent(0), overallPercent(0)
 {
-    basepath = launcherApplication::getConfig()->getString("general", "basepath");
-
-    if (launcherApplication::getConfig()->getInt("updater", "verifySignature")) {
-        Crypto::init();
-    }
-
-    if (updater == nullptr) {
+//    basepath = launcherApplication::getConfig()->getString("general", "basepath");
+//
+//    if (launcherApplication::getConfig()->getInt("updater", "verifySignature")) {
+//        Crypto::init();
+//    }
+//
+//    if (updater == nullptr) {
         updater = this;
-    }
+//    }
 }
 
 Updater::~Updater()
@@ -44,7 +43,7 @@ Updater::~Updater()
 bool Updater::checkForUpdates()
 {
     if (!getLatestComponents()) {
-        Logger::writeToLog("Unable to fetch latest version information");
+//        Logger::writeToLog("Unable to fetch latest version information");
         return false;
     }
 
@@ -63,7 +62,7 @@ void Updater::run()
 
     totalTasks = 0;
     for (int i = 0; i < components.size(); i++) {
-        Launcher::Component *component = &components.getReference(i);
+//        Launcher::Component *component = &components.getReference(i);
         if (component->canUpdate()) {
             totalTasks += 5;
             if (component->getName() == "launcher") {
@@ -82,7 +81,7 @@ void Updater::run()
 
     startFirstTask();
     for (int i = 0; i < components.size(); i++) {
-        Launcher::Component *component = &components.getReference(i);
+//        Launcher::Component *component = &components.getReference(i);
         if (component->canUpdate()) {
             if (!updateComponent(*component)) {
                 status = UPDATER_FAILED;
@@ -101,35 +100,35 @@ enum UpdaterStatus Updater::getStatus()
 
 bool Updater::getStatusUpdate(double& overallPercent, double& taskPercent)
 {
-    const GenericScopedLock<SpinLock> lock(statusLock);
+//    const GenericScopedLock<SpinLock> lock(statusLock);
     overallPercent = this->overallPercent;
     taskPercent = this->taskPercent;
     return statusStringUpdated;
 }
 
-String Updater::getStatusText()
+std::string Updater::getStatusText()
 {
-    const GenericScopedLock<SpinLock> lock(statusLock);
+//    const GenericScopedLock<SpinLock> lock(statusLock);
     statusStringUpdated = false;
     return statusString;
 }
 
-void Updater::setStatusText(const String& s)
+void Updater::setStatusText(const std::string& s)
 {
-    const GenericScopedLock<SpinLock> lock(statusLock);
+//    const GenericScopedLock<SpinLock> lock(statusLock);
     statusString = s;
     statusStringUpdated = true;
 }
 
 void Updater::setTaskPercent(const double& percent)
 {
-    const GenericScopedLock<SpinLock> lock(statusLock);
+//    const GenericScopedLock<SpinLock> lock(statusLock);
     taskPercent = percent;
 }
 
 void Updater::startFirstTask()
 {
-    const GenericScopedLock<SpinLock> lock(statusLock);
+//    const GenericScopedLock<SpinLock> lock(statusLock);
     taskPercent = 0;
     completedTasks = 0;
     overallPercent = 0;
@@ -137,7 +136,7 @@ void Updater::startFirstTask()
 
 void Updater::startNextTask()
 {
-    const GenericScopedLock<SpinLock> lock(statusLock);
+//    const GenericScopedLock<SpinLock> lock(statusLock);
     taskPercent = 0;
     completedTasks++;
     if (totalTasks) {
@@ -150,12 +149,12 @@ void Updater::startNextTask()
 
 bool Updater::getLatestComponents()
 {
-    URL url = URL(UPDATER_URL_PREFIX).getChildURL("latest.php")
-        .withParameter("channel", launcherApplication::getConfig()->getString("updater", "channel"))
-        .withParameter("platform", launcherApplication::getConfig()->getString("updater", "platform"))
-        .withParameter("components", "launcher,tremulous");
+//    std::string url = std::string(UPDATER_URL_PREFIX).getChildURL("latest.php")
+//        .withParameter("channel", launcherApplication::getConfig()->getString("updater", "channel"))
+//        .withParameter("platform", launcherApplication::getConfig()->getString("updater", "platform"))
+//        .withParameter("components", "launcher,tremulous");
 
-    ScopedPointer<InputStream> stream(url.createInputStream(false, nullptr, nullptr, String(), 5000));
+    ScopedPointer<InputStream> stream(url.createInputStream(false, nullptr, nullptr, std::string(), 5000));
     if (stream == nullptr) {
         return false;
     }
@@ -170,7 +169,7 @@ bool Updater::getLatestComponents()
 
     components.clear();
     for (int i = 0; i < versionsSet->size(); i++) {
-        String componentName(versionsSet->getName(i).toString());
+        std::string componentName(versionsSet->getName(i).toString());
         Launcher::Component component(componentName);
         component.setRemoteVersion(versionsSet->getValueAt(i).toString());
         components.add(component);
@@ -181,15 +180,15 @@ bool Updater::getLatestComponents()
 
 bool Updater::updateComponent(Launcher::Component& component)
 {
-	Logger::writeToLog(String("updating component ") + component.getName());
+	Logger::writeToLog(std::string("updating component ") + component.getName());
 
-	setStatusText(String(TRANS("Fetching info for ")) + component.getName());
+	setStatusText(std::string(TRANS("Fetching info for ")) + component.getName());
     if (!component.getRemoteInfo()) {
         return false;
     }
 
     startNextTask();
-    setStatusText(String(TRANS("Checking if ")) + component.getName() + String(TRANS(" is already installed")));
+    setStatusText(std::string(TRANS("Checking if ")) + component.getName() + std::string(TRANS(" is already installed")));
     if (component.alreadyInstalled()) {
         startNextTask();
         startNextTask();
@@ -199,19 +198,19 @@ bool Updater::updateComponent(Launcher::Component& component)
     }
 
     startNextTask();
-    setStatusText(String(TRANS("Downloading ")) + component.getName());
+    setStatusText(std::string(TRANS("Downloading ")) + component.getName());
     if (!component.download()) {
         return false;
     }
 
     startNextTask();
-    setStatusText(String(TRANS("Verifying ")) + component.getName());
+    setStatusText(std::string(TRANS("Verifying ")) + component.getName());
     if (!component.verify()) {
         return false;
     }
 
     startNextTask();
-    setStatusText(String(TRANS("Installing ")) + component.getName());
+    setStatusText(std::string(TRANS("Installing ")) + component.getName());
     if (!component.install()) {
         return false;
     }
@@ -226,12 +225,12 @@ Updater *Updater::getUpdater()
     return updater;
 }
 
-bool Updater::downloadFile(const URL& url, const File& file, int64 resume)
+bool Updater::downloadFile(const std::string& url, const FILE& file, int64_t resume)
 {
-    String headers;
+    std::string headers;
 
     if (resume > 0) {
-        headers = String("Range: bytes=") + String(resume) + String("-\r\n");
+        headers = std::string("Range: bytes=") + std::string(resume) + std::string("-\r\n");
     }
     else if (file.exists()) {
         if (!file.deleteFile()) {
@@ -258,13 +257,13 @@ bool Updater::downloadFile(const URL& url, const File& file, int64 resume)
         return false;
     }
 
-    int64 length = -1;
+    int64_t length = -1;
     if (responseHeaders.containsKey("Content-Length")) {
         length = responseHeaders["Content-Length"].getLargeIntValue();
     }
 
-    int64 pos = 0;
-    int64 last_pos = pos;
+    int64_t pos = 0;
+    int64_t last_pos = pos;
     double start_time = Time::getMillisecondCounterHiRes();
     double last_time = start_time;
     double now;
@@ -295,21 +294,21 @@ bool Updater::downloadFile(const URL& url, const File& file, int64 resume)
             if (num_samples < DOWNLOAD_SAMPLES) {
                 num_samples++;
             }
-            int64 accumulator = 0;
+            int64_t accumulator = 0;
             for (int i = 0; i < num_samples; i++) {
                 accumulator += samples[i];
             }
             bytes_per_second = (int)(accumulator / (num_samples * ((double)DOWNLOAD_UPDATE_INTERVAL / 1000)));
 
-            String message(String("Downloading ") + file.getFileName() + String(" at "));
+            std::string message(std::string("Downloading ") + file.getFileName() + std::string(" at "));
             if (bytes_per_second >= 1024 * 1024) {
-                message += String((double)bytes_per_second / 1024 / 1024, 2) + String(" MB/s");
+                message += std::string((double)bytes_per_second / 1024 / 1024, 2) + std::string(" MB/s");
             }
             else if (bytes_per_second >= 1024) {
-                message += String((double)bytes_per_second / 1024, 2) + String(" KB/s");
+                message += std::string((double)bytes_per_second / 1024, 2) + std::string(" KB/s");
             }
             else {
-                message += String(bytes_per_second) + String(" bytes/s");
+                message += std::string(bytes_per_second) + std::string(" bytes/s");
             }
             updater->setStatusText(message);
         }
@@ -323,15 +322,15 @@ bool Updater::downloadFile(const URL& url, const File& file, int64 resume)
     bytes_per_second = (int)(pos / ((now - start_time) / 1000));
     updater->setTaskPercent(1);
 
-    String message(String("Completed download of ") + file.getFileName() + String(" at "));
+    std::string message(std::string("Completed download of ") + file.getFileName() + std::string(" at "));
     if (bytes_per_second >= 1024 * 1024) {
-        message += String((double)bytes_per_second / 1024 / 1024, 2) + String(" MB/s");
+        message += std::string((double)bytes_per_second / 1024 / 1024, 2) + std::string(" MB/s");
     }
     else if (bytes_per_second >= 1024) {
-        message += String((double)bytes_per_second / 1024, 2) + String(" KB/s");
+        message += std::string((double)bytes_per_second / 1024, 2) + std::string(" KB/s");
     }
     else {
-        message += String(bytes_per_second) + String(" bytes/s");
+        message += std::string(bytes_per_second) + std::string(" bytes/s");
     }
     updater->setStatusText(message);
 
